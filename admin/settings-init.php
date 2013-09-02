@@ -39,6 +39,8 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
         	register_setting( 'wp_clean_admin-general', 'setting_c', array(&$this, 'validate_text_input') );
         	register_setting( 'wp_clean_admin-general', 'setting_d', array(&$this, 'validate_text_input') );
         	register_setting( 'wp_clean_admin-general', 'setting_e', array(&$this, 'validate_text_input') );
+        	register_setting( 'wp_clean_admin-general', 'setting_f' );
+        	register_setting( 'wp_clean_admin-general', 'setting_g' );
 
         	// Register Hide settings
         	register_setting( 'wp_clean_admin-hide', 'hide_posts' );
@@ -139,6 +141,42 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 			    )
 			);
 
+			add_settings_field(
+			    'setting_f',											// ID used to identify the field throughout the theme
+			    'Setting F', 											// The label to the left of the option interface element
+			    array(&$this, 'settings_field_input_radio'),			// The name of the function responsible for rendering the option interface
+			    'wp-clean-admin-general', 								// The page on which this option will be displayed
+			    'wp_clean_admin-general',								// The name of the section to which this field belongs
+			    array(
+			        'field' => 'setting_f',								// The array of arguments to pass to the callback. In this case, just a description.
+					'options' => array(
+									1 => '1',
+									2 => '2'
+								),
+					'labels' => array(
+									1 => 'Option One',
+									2 => 'Option Two'
+								)
+
+			    )
+			);
+
+			add_settings_field(
+			    'setting_g',											// ID used to identify the field throughout the theme
+			    'Setting G', 											// The label to the left of the option interface element
+			    array(&$this, 'settings_field_input_select'),			// The name of the function responsible for rendering the option interface
+			    'wp-clean-admin-general', 								// The page on which this option will be displayed
+			    'wp_clean_admin-general',								// The name of the section to which this field belongs
+			    array(
+			        'field' => 'setting_g',								// The array of arguments to pass to the callback. In this case, just a description.
+			    	'options' => array(
+			    					'value1' => 'Value 1',
+			    					'value2' => 'Value 2',
+			    					'value3' => 'Value 3'
+			    				)
+			    )
+			);
+
         } 
         
 		/**
@@ -158,7 +196,7 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
             // Get the field name from the $args array
             $field = $args['field'];
             // Get the value of this setting
-            $value = get_option($field);
+            $value = get_option( $field );
             // echo a proper input type="text"
             echo sprintf('<input type="text" name="%s" id="%s" value="%s" />', $field, $field, $value);
         }
@@ -171,7 +209,7 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
             // Get the field name from the $args array
         	$field = $args['field'];
             // Get the value of this setting
-        	$value = get_option($field);
+        	$value = get_option( $field );
         	// Render the output        	
         	echo  sprintf('<textarea id="%s" name="%s" rows="5" cols="50">%s</textarea>', $field, $field, $value);        	
         }
@@ -184,10 +222,48 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 		    // Get the field name from the $args array
 			$field = $args['field'];
 		    // Get the value of this setting and check to see if the checkbox has been checked
-			$value = checked( get_option($field), TRUE, FALSE);
+			$value = checked( get_option( $field ), TRUE, FALSE);
 			// Render the output
 			echo sprintf('<input type="checkbox" name="%s" id="%s" value="1" %s>', $field, $field, $value );        	
-		}		
+		}
+		
+		/**
+		 * Generate radio button inputs for settings fields
+		 */
+		public function settings_field_input_radio( $args ) {
+			// Get the field name from the $args array
+			$field = $args['field'];
+			$options = $args['options'];
+			$labels = $args['labels'];
+			// Get the value of this setting
+			$value = get_option( $field );
+			// Render the output        			    
+			if ( ! isset( $html ) ) $html = "";
+			foreach ($options as $key => $option) {
+				$html .= '<input type="radio" id="'. $field . "_" . $key . '" name="'. $field . '" value="' . $option . '"' . checked( $option, $value, false ) . '/>';  
+				$html .= '<label for="'. $field . "_" . $key . '" style="margin-left:5px">' . $labels[$key] . '</label>';  
+		    	$html .= '<br />';
+			} 
+		    echo $html;
+		}
+		
+		/**
+		 * Generate select inputs for settings fields
+		 */
+		public function settings_field_input_select( $args ) {  
+			// Get the field and options from the $args array
+			$field = $args['field'];
+			$options = $args['options'];
+			// Get the value of this setting
+			$value = get_option( $field );
+		    $html = '<select id="'. $field . '" name="'. $field . '">';
+				$html .= '<option value="default">Select an option...</option>';
+				foreach ($options as $key => $option) {
+					$html .= '<option value="'. $key . '"' . selected( $value, $key, false) . '>'. $option . '</option>';  
+				}
+		    $html .= '</select>';  
+		    echo $html;
+		}  
         
         /**
          * Validate text field inputs in the general settings group
