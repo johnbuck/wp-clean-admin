@@ -41,6 +41,7 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
         	register_setting( 'wp_clean_admin-general', 'setting_e', array(&$this, 'validate_text_input') );
         	register_setting( 'wp_clean_admin-general', 'setting_f' );
         	register_setting( 'wp_clean_admin-general', 'setting_g' );
+        	register_setting( 'wp_clean_admin-general', 'setting_h' );
 
         	// Register Hide settings
         	register_setting( 'wp_clean_admin-hide', 'hide_posts' );
@@ -65,7 +66,7 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 			add_settings_section(
 			    'wp_clean_admin-general',								// ID used to identify this section and with which to register options 
 			    'General Settings',										// Title to be displayed on the administration page
-			    array(&$this, 'settings_section_wp_plugin_template'),	// Callback used to render the description of the section
+			    array(&$this, 'settings_section_general'),				// Callback used to render the description of the section
 			    'wp-clean-admin-general'								// Page on which to add this section of options
 			);
 
@@ -73,7 +74,7 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 			add_settings_section(
 			    'wp_clean_admin-hide',									// ID used to identify this section and with which to register options 
 			    'Hide Admin Areas',										// Title to be displayed on the administration page
-			    array(&$this, 'settings_section_wp_plugin_template'),	// Callback used to render the description of the section
+			    array(&$this, 'settings_section_hide'),					// Callback used to render the description of the section
 			    'wp-clean-admin-hide'									// Page on which to add this section of options
 			);
 
@@ -81,7 +82,7 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 			add_settings_section(
 			    'wp_clean_admin-customize',								// ID used to identify this section and with which to register options 
 			    'Customize Admin Areas',								// Title to be displayed on the administration page
-			    array(&$this, 'settings_section_wp_plugin_template'),	// Callback used to render the description of the section
+			    array(&$this, 'settings_section_customize'),			// Callback used to render the description of the section
 			    'wp-clean-admin-customize'								// Page on which to add this section of options
 			);
 			        	
@@ -177,17 +178,51 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 			    )
 			);
 
+			add_settings_field(
+			    'setting_h',											// ID used to identify the field throughout the theme
+			    'Setting H', 											// The label to the left of the option interface element
+			    array(&$this, 'settings_field_input_select'),			// The name of the function responsible for rendering the option interface
+			    'wp-clean-admin-general', 								// The page on which this option will be displayed
+			    'wp_clean_admin-general',								// The name of the section to which this field belongs
+			    array(
+			        'field' => 'setting_h',								// The array of arguments to pass to the callback. In this case, just a description.
+			    	'options' => 'user_roles'
+			    )
+			);
+
         } 
+        
+// Here there be section description callbacks
+
+		/**
+		 * This function provides descriptions for settings sections
+		 */
+        public function settings_section_general() {
+      
+            // Think of this as help text for the section.
+            echo '<p>This is the description for the general tab of the settings page.</p>';
+        }
         
 		/**
 		 * This function provides descriptions for settings sections
 		 */
-        public function settings_section_wp_plugin_template() {
-        
-            // Think of this as help text for the section.
-            echo 'These settings do things for the WP Plugin Template.';
-        }
-        
+		public function settings_section_hide() {
+
+			// Think of this as help text for the section.
+			echo '<p>This is the description for the hide tab of the settings page.</p>';
+		}
+
+		/**
+		 * This function provides descriptions for settings sections
+		 */
+		public function settings_section_customize() {
+
+			// Think of this as help text for the section.
+			echo '<p>This is the description for the customize tab of the settings page.</p>';
+		}
+
+// Here there be settings field input callbacks
+
         /**
          * Generate text inputs for settings fields
          */
@@ -254,6 +289,11 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 			// Get the field and options from the $args array
 			$field = $args['field'];
 			$options = $args['options'];
+			
+			if ( $options == 'user_roles' ) {
+				$options = $this->get_user_roles();				
+			}
+			
 			// Get the value of this setting
 			$value = get_option( $field );
 		    $html = '<select id="'. $field . '" name="'. $field . '">';
@@ -264,7 +304,9 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
 		    $html .= '</select>';  
 		    echo $html;
 		}  
-        
+
+// Here there be input validation/sanitization callbacks
+
         /**
          * Validate text field inputs in the general settings group
          */
@@ -284,8 +326,24 @@ if( ! class_exists( 'WP_Clean_Admin_Settings_Init' ) ) {
             }
 
             // Return the new collection  
-            return apply_filters( 'sanitize_general_settings', $output, $input );          
+            return apply_filters( 'sanitize_general_settings', $output, $input );      
         }
+
+// Here there be helper functions
+
+		public function get_user_roles() {
+
+		    // Get all the roles that exist in this WordPress Install
+		    global $wp_roles;
+		    $all_roles = $wp_roles->roles;
+			// Loop through these roles and pick out just the names and slugs
+		    foreach ($all_roles as $key => $role) {
+		    	$user_roles[$key] = $role['name'];
+		    }
+
+			// Return just the user role names and slugs
+		    return $user_roles;
+		}
 
     } 
 }
